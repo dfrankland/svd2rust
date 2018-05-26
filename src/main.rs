@@ -14,7 +14,6 @@ extern crate syn;
 mod errors;
 mod generate;
 mod util;
-mod target;
 mod build_rs;
 
 use std::fs::File;
@@ -24,20 +23,8 @@ use std::io::{self, Write};
 use clap::{App, Arg};
 
 use errors::*;
-use target::Target;
+use util::Target;
 use build_rs::build_rs;
-
-impl Target {
-    fn parse(s: &str) -> Result<Self> {
-        Ok(match s {
-            "cortex-m" => Target::CortexM,
-            "msp430" => Target::Msp430,
-            "riscv" => Target::RISCV,
-            "none" => Target::None,
-            _ => bail!("unknown target {}", s),
-        })
-    }
-}
 
 fn run() -> Result<()> {
     use std::io::Read;

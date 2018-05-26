@@ -444,7 +444,6 @@ extern crate syn;
 mod errors;
 mod generate;
 mod util;
-pub mod target;
 mod build_rs;
 
 use std::fs::File;
@@ -452,7 +451,7 @@ use std::path::Path;
 use std::io::Read;
 
 use errors::*;
-use target::Target;
+pub use util::Target;
 use build_rs::build_rs;
 
 #[derive(Debug)]
@@ -462,6 +461,7 @@ pub struct Svd2RustFiles {
     pub build: Option<String>,
 }
 
+/// Generates Rust code for the specified SVD file.
 pub fn svd_2_rust<P: AsRef<Path>>(svd_file: P, target: Target, nightly: bool) -> Result<Svd2RustFiles> {
     let xml = &mut String::new();
     File::open(svd_file)
