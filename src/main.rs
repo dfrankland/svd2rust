@@ -14,6 +14,7 @@ extern crate syn;
 mod errors;
 mod generate;
 mod util;
+mod target;
 
 use std::fs::File;
 use std::process;
@@ -23,14 +24,7 @@ use quote::Tokens;
 use clap::{App, Arg};
 
 use errors::*;
-
-#[derive(Clone, Copy, PartialEq)]
-pub enum Target {
-    CortexM,
-    Msp430,
-    RISCV,
-    None,
-}
+use target::Target;
 
 impl Target {
     fn parse(s: &str) -> Result<Self> {
