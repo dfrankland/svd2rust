@@ -428,8 +428,71 @@
 //! compiler. These features are
 //!
 //! - `#[feature(untagged_unions)]` for overlapping/overloaded registers
+#![recursion_limit = "128"]
 
-// NOTE This file is for documentation only
+extern crate cast;
+extern crate clap;
+extern crate either;
+#[macro_use]
+extern crate error_chain;
+extern crate inflections;
+#[macro_use]
+extern crate quote;
+extern crate svd_parser as svd;
+extern crate syn;
+
+mod errors;
+mod generate;
+mod util;
+pub mod target;
+mod build_rs;
+
+use std::fs::File;
+use std::path::Path;
+use std::io::Read;
+
+use errors::*;
+use target::Target;
+use build_rs::build_rs;
+
+#[derive(Debug)]
+pub struct Svd2RustFiles {
+    pub lib: Option<String>,
+    pub device: Option<String>,
+    pub build: Option<String>,
+}
+
+pub fn svd_2_rust<P: AsRef<Path>>(svd_file: P, target: Target, nightly: bool) -> Result<Svd2RustFiles> {
+    let xml = &mut String::new();
+    File::open(svd_file)
+        .chain_err(|| "couldn't open the SVD file")?
+        .read_to_string(xml)
+        .chain_err(|| "couldn't read the SVD file")?;
+
+    let device = svd::parse(xml);
+
+    let mut device_x = String::new();
+    let items = generate::device::render(&device, &target, nightly, &mut device_x).unwrap();
+
+    let svd_2_rust_files = match target {
+        Target::CortexM => {
+            Svd2RustFiles {
+                lib: Some(quote!(#(#items)*).to_string()),
+                device: Some(device_x),
+                build: Some(build_rs().to_string()),
+            }
+        },
+        _ => {
+            Svd2RustFiles {
+                lib: Some(quote!(#(#items)*).to_string()),
+                device: None,
+                build: None,
+            }
+        }
+    };
+
+    Ok(svd_2_rust_files)
+}
 
 /// Assigns a handler to an interrupt
 ///
