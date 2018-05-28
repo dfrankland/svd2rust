@@ -446,10 +446,6 @@ mod generate;
 mod util;
 mod build_rs;
 
-use std::fs::File;
-use std::path::Path;
-use std::io::Read;
-
 use errors::*;
 pub use util::Target;
 use build_rs::build_rs;
@@ -462,17 +458,10 @@ pub struct Svd2RustFiles {
 }
 
 /// Generates Rust code for the specified SVD file.
-pub fn svd_2_rust<P: AsRef<Path>>(svd_file: P, target: Target, nightly: bool) -> Result<Svd2RustFiles> {
-    let xml = &mut String::new();
-    File::open(svd_file)
-        .chain_err(|| "couldn't open the SVD file")?
-        .read_to_string(xml)
-        .chain_err(|| "couldn't read the SVD file")?;
-
+pub fn svd_2_rust(xml: &str, target: &Target, nightly: bool) -> Result<Svd2RustFiles> {
     let device = svd::parse(xml);
-
     let mut device_x = String::new();
-    let items = generate::device::render(&device, &target, nightly, &mut device_x).unwrap();
+    let items = generate::device::render(&device, target, nightly, &mut device_x).unwrap();
 
     let svd_2_rust_files = match target {
         Target::CortexM => {
